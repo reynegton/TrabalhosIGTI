@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:convert';
 
+//-------classes que serao usadas-------------------------------------------------------------------------------------------------
 class Conta {
   int id;
   int agencia;
@@ -9,6 +10,12 @@ class Conta {
   int balance;
 }
 
+class Agencia {
+  int agencia;
+  int saldo;
+}
+
+//------funcoes auxiliadoras-------------------------------------------------------------------------------------------------------
 const link = "https://igti-film.herokuapp.com/api/accounts";
 
 Future<String> executaRequest(String link) async {
@@ -23,7 +30,6 @@ int retornarSaldoTotal(List<Conta> contas, int agencia) {
     } else {
       contasaux = contas;
     }
-    ;
   }
   return (contasaux.length > 0)
       ? contasaux.map((item) => item.balance).reduce((a, b) => a + b)
@@ -43,7 +49,6 @@ List retornaListaAgencias(List<Conta> contas) {
       arrayAux.add(contas[i].agencia);
     }
   }
-
   return arrayAux;
 }
 
@@ -52,6 +57,23 @@ int retornaMaiorSaldoAgencia(List<Conta> contas, int agencia) {
       contas.where((item) => item.agencia == agencia).toList();
   contasAgencia.sort((a, b) => b.balance - a.balance);
   return (contasAgencia.length > 0) ? contasAgencia.first.balance : 0;
+}
+
+Future<List<Conta>> retornaContas() async {
+  var contasJson = jsonDecode(await executaRequest(link));
+  List<Conta> contasAux = new List();
+
+  for (int i = 0; i < contasJson.length; i++) {
+    var conta = new Conta();
+    conta.id = contasJson[i]["id"];
+    conta.agencia = contasJson[i]["agencia"];
+    conta.conta = contasJson[i]["conta"];
+    conta.name = contasJson[i]["name"];
+    conta.balance = contasJson[i]["balance"];
+
+    contasAux.add(conta);
+  }
+  return contasAux;
 }
 
 //-------------------------Questoes----------------------------------------------------------------
@@ -73,13 +95,7 @@ void questao3(List<Conta> contas) {
       contasAux.length.toString());
 }
 
-class Agencia {
-  int agencia;
-  int saldo;
-}
-
 void questao4e5(List<Conta> contas) {
-  //console.info("Dados para questões 4 e 5");
   var listaAgencias = retornaListaAgencias(contas);
   List<Agencia> array4e5 = new List();
 
@@ -92,13 +108,11 @@ void questao4e5(List<Conta> contas) {
   array4e5.sort((a, b) => b.saldo - a.saldo);
   print("Questão 4 - Agencia com maior saldo: " +
       array4e5.first.agencia.toString());
-  array4e5.sort((a, b) => a.saldo - b.saldo);
   print("Questão 5 - Agencia com menor saldo: " +
-      array4e5.first.agencia.toString());
+      array4e5.last.agencia.toString());
 }
 
 void questao6(List<Conta> contas) {
-  //console.info("Dados para questao 6");
   var listaAgencias = retornaListaAgencias(contas);
   List maioresSaldos = new List();
   for (int i = 0; i < listaAgencias.length; i++) {
@@ -135,22 +149,10 @@ void questao12(List<Conta> contas) {
   print("Questão 12 - Ultimo id: " + proximoid.toString());
 }
 
+//------------------main-----------------------------------------------------------------------------------------------------------
 void main(List<String> args) async {
-  var contasJson = jsonDecode(await executaRequest(
-      link)); // jsonDecode(await HttpRequest.getString(link));
   List<Conta> contas = new List();
-
-  for (int i = 0; i < contasJson.length; i++) {
-    var conta = new Conta();
-    conta.id = contasJson[i]["id"];
-    conta.agencia = contasJson[i]["agencia"];
-    conta.conta = contasJson[i]["conta"];
-    conta.name = contasJson[i]["name"];
-    conta.balance = contasJson[i]["balance"];
-
-    contas.add(conta);
-  }
-
+  contas = await retornaContas();
   questao1(contas);
   questao2(contas);
   questao3(contas);
