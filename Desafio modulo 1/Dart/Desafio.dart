@@ -1,5 +1,5 @@
-import 'dart:html';
 import 'dart:convert';
+import 'dart:io';
 
 //-------classes que serao usadas-------------------------------------------------------------------------------------------------
 class Conta {
@@ -16,10 +16,18 @@ class Agencia {
 }
 
 //------funcoes auxiliadoras-------------------------------------------------------------------------------------------------------
-const link = "https://igti-film.herokuapp.com/api/accounts";
 
-Future<String> executaRequest(String link) async {
-  return HttpRequest.getString(link);
+Future<String> executaRequest() async {
+  const link = "https://igti-film.herokuapp.com/api/accounts";
+  var result = new StringBuffer();
+  String textJson = "";
+  var request = await HttpClient().getUrl(Uri.parse(link));
+  var response = await request.close();
+  await for (var contents in response.transform(utf8.decoder)) {
+    result.write(contents);
+  }
+  textJson += result.toString();
+  return textJson;
 }
 
 int retornarSaldoTotal(List<Conta> contas, int agencia) {
@@ -60,16 +68,17 @@ int retornaMaiorSaldoAgencia(List<Conta> contas, int agencia) {
 }
 
 Future<List<Conta>> retornaContas() async {
-  var contasJson = jsonDecode(await executaRequest(link));
+  var listJson = jsonDecode(await executaRequest());
   List<Conta> contasAux = new List();
 
-  for (int i = 0; i < contasJson.length; i++) {
-    var conta = new Conta();
-    conta.id = contasJson[i]["id"];
-    conta.agencia = contasJson[i]["agencia"];
-    conta.conta = contasJson[i]["conta"];
-    conta.name = contasJson[i]["name"];
-    conta.balance = contasJson[i]["balance"];
+  //for (int i = 0; i < contasJson.length; i++) {
+  for (var item in listJson) {
+    Conta conta = new Conta();
+    conta.id = item["id"];
+    conta.agencia = item["agencia"];
+    conta.conta = item["conta"];
+    conta.name = item["name"];
+    conta.balance = item["balance"];
 
     contasAux.add(conta);
   }
